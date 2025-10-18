@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>招聘流程动态图解（16:9）</title>
+<style>
+  :root{--bg:#f4f8fc;--primary:#1e73be;--accent:#0b61a6;--text:#0b2b3b}
+  html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;background:var(--bg);color:var(--text)}
+  .stage{width:1280px;height:720px;margin:18px auto;position:relative;background:linear-gradient(180deg,#ffffff,#eef6fb);border-radius:12px;box-shadow:0 8px 30px rgba(6,20,40,0.12);overflow:hidden;border:1px solid rgba(30,115,190,0.06)}
+  header{position:absolute;left:0;right:0;top:0;height:84px;background:linear-gradient(90deg,var(--primary),#68aee0);display:flex;align-items:center;padding:0 28px;color:#fff}
+  header h1{font-size:22px;margin:0;font-weight:600}
+  .left-panel{position:absolute;left:24px;top:110px;width:380px}
+  .card{background:#fff;border-radius:10px;padding:18px;box-shadow:0 6px 18px rgba(11,43,59,0.06);margin-bottom:18px}
+  .card h2{margin:0;font-size:16px;color:var(--accent)}
+  canvas{display:block;margin-left:420px;margin-top:110px;border-radius:8px;background:transparent}
+  .controls{position:absolute;left:24px;bottom:18px;display:flex;gap:8px}
+  button{background:var(--primary);border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+  button.secondary{background:#e6f2fb;color:var(--accent);border:1px solid rgba(11,97,169,0.08)}
+  .note{font-size:12px;color:#4b6b82;margin-top:6px}
+  .subtitle{position:absolute;left:420px;right:24px;bottom:18px;background:rgba(0,0,0,0.5);color:#fff;padding:10px 14px;border-radius:8px;font-size:18px}
+  .timer{position:absolute;right:24px;top:24px;color:#fff;background:rgba(0,0,0,0.16);padding:6px 10px;border-radius:8px;font-weight:700}
+  .hint{font-size:12px;color:#234a6a;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <header>
+    <h1>招聘流程全解析（动态图解，中文旁白）</h1>
+    <div class="timer" id="timer">00:00 / 02:00</div>
+  </header>
+
+  <div class="left-panel">
+    <div class="card">
+      <h2>设置</h2>
+      <p class="note">风格：蓝白 · 动态图解<br>旁白：中文男声（通过浏览器语音合成）<br>音乐：无</p>
+    </div>
+    <div class="card">
+      <h2>操作</h2>
+      <div style="display:flex;gap:8px">
+        <button id="playBtn">播放</button>
+        <button id="pauseBtn" class="secondary">暂停</button>
+        <button id="recBtn">开始录制（仅视频）</button>
+        <button id="stopRecBtn" class="secondary" disabled>停止并下载</button>
+      </div>
+      <p class="hint">说明：浏览器将使用系统语音合成进行旁白。录制功能仅录制画面（WebM）。若需包含配音，请使用屏幕录制工具同时录制系统音频或按照页面底部提示将音频导出并合成。</p>
+    </div>
+  </div>
+
+  <canvas id="canvas" width="820" height="520"></canvas>
+
+  <div class="subtitle" id="subtitle">欢迎观看：招聘流程全解析</div>
+</div>
+
+<script>
+// Scenes configuration: total ~120s
+const scenes = [
+  {title:'开场',text:'招聘流程全解析 —— 从需求到录用，系统化管理。',dur:10},
+  {title:'一、岗位需求分析',text:'由各部门提出用人申请，明确岗位名称、人数、职责与任职要求。人事部门审核招聘需求，确认招聘计划与预算。',dur:10},
+  {title:'二、发布招聘信息',text:'在招聘网站、社交媒体或校园渠道发布招聘广告，内容包含岗位职责、任职资格、工作地点、薪资范围与联系方式。',dur:10},
+  {title:'三、收集与筛选简历',text:'收集应聘者简历与资料，根据岗位要求进行初步筛选，挑选符合条件的候选人。',dur:10},
+  {title:'四、初试（电话或线上）',text:'人事进行初试，了解背景、沟通能力及求职动机，评估是否符合企业文化。',dur:10},
+  {title:'五、复试（专业或主管面试）',text:'由用人部门主管进行深入面试，重点考察专业能力、解决问题的思路与团队协作能力。',dur:10},
+  {title:'六、测试或试讲（可选）',text:'根据岗位性质安排笔试、技能测试或试讲（教师岗位尤其适用）。',dur:8},
+  {title:'七、背景调查',text:'核实候选人的学历、工作经历及推荐人信息，确保资料真实性。',dur:8},
+  {title:'八、录用决定',text:'综合面试、测试与背景调查结果，确定录用人选并发送录用通知，明确入职时间与资料要求。',dur:10},
+  {title:'九、入职办理',text:'新员工签订劳动合同、填写入职资料并参与岗位与企业文化培训。',dur:8},
+  {title:'十、试用与评估',text:'在试用期内评估员工表现，表现良好者转正；如不符合要求，视情况延长试用或终止聘用。',dur:10},
+  {title:'结尾',text:'科学招聘 · 精准选才 · 共创未来。感谢观看。',dur:11}
+];
+
+const totalSec = scenes.reduce((s,c)=>s+c.dur,0);
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const subtitleEl = document.getElementById('subtitle');
+const timerEl = document.getElementById('timer');
+let currentScene = -1;let elapsed = 0;let playing=false;let sceneStart=0;let req;
+
+function drawScene(index,progress){
+  // Clear
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // Background panel
+  ctx.fillStyle = '#ffffff';
+  roundRect(ctx,10,10,800,500,12,true,false);
+
+  // Header
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#1e73be';
+  ctx.fillRect(10,10,800,68);
+  ctx.fillStyle='#fff';ctx.font='18px bold Inter, Arial';ctx.fillText('招聘流程 — 动态图解',28,45);
+
+  // Left column icons / timeline
+  ctx.fillStyle='#eef6fb';ctx.fillRect(28,92,120,380);
+  ctx.fillStyle='#0b61a6';ctx.font='700 16px Inter, Arial';ctx.fillText('流程',40,120);
+
+  // Draw current scene title
+  const scene = scenes[index];
+  ctx.fillStyle='#0b2b3b';ctx.font='700 22px Inter, Arial';ctx.fillText(scene.title,170,120);
+
+  // Draw scene text (wrapped)
+  ctx.fillStyle='#234a6a';ctx.font='16px Inter, Arial';
+  wrapText(ctx, scene.text, 170,150,620,22);
+
+  // progress bar
+  const barW=620; const barH=10; const barX=170; const barY=470;
+  ctx.fillStyle='#e6f2fb'; ctx.fillRect(barX,barY,barW,barH);
+  ctx.fillStyle='#1e73be'; ctx.fillRect(barX,barY,barW*progress,barH);
+  ctx.strokeStyle='#cfe9fb'; ctx.strokeRect(barX,barY,barW,barH);
+
+  // Icon animation (simple circles representing steps)
+  const steps = Math.min(8, scenes.length);
+  for(let i=0;i<steps;i++){
+    const x = 40; const y = 150 + i*40;
+    ctx.beginPath(); ctx.arc(x,y,12,0,Math.PI*2); ctx.fillStyle=(i===index? '#1e73be':'#cfe9fb'); ctx.fill();
+  }
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+  const words = text.split(' ');
+  let line=''; let curY = y;
+  for(let n=0;n<words.length;n++){
+    const testLine = line + words[n] + ' ';
+    const metrics = ctx.measureText(testLine);
+    if(metrics.width > maxWidth && n>0){
+      ctx.fillText(line, x, curY);
+      line = words[n] + ' ';
+      curY += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  if(line) ctx.fillText(line, x, curY);
+}
+
+function roundRect(ctx,x,y,width,height,radius,fill,stroke){
+  if(typeof radius==='undefined') radius=5; if(typeof radius==='number') radius={tl:radius,br:radius,tr:radius,bl:radius};
+  ctx.beginPath(); ctx.moveTo(x+radius.tl,y); ctx.arcTo(x+width,y,x+width,y+radius.tr,radius.tr); ctx.arcTo(x+width,y+height,x+width-radius.br,y+height,radius.br); ctx.arcTo(x,y+height,x,y+height-radius.bl,radius.bl); ctx.arcTo(x,y,x+radius.tl,y,radius.tl); ctx.closePath();
+  if(fill){ctx.fillStyle = '#fff';ctx.fill();}
+  if(stroke){ctx.stroke();}
+}
+
+// Speech synthesis helpers
+function speak(text, onend){
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'zh-CN';
+  utter.rate = 0.96; utter.pitch = 0.8; utter.volume = 1;
+  // pick a zh voice if available
+  const voices = speechSynthesis.getVoices();
+  for(const v of voices){
+    if(/zh|Chinese|谷歌|Google/.test(v.name) && /Male|男/.test(v.name)) { utter.voice = v; break; }
+  }
+  // If no explicit male voice, prefer any zh voice
+  if(!utter.voice){
+    for(const v of voices){ if(/zh|Chinese/.test(v.name)){ utter.voice = v; break; } }
+  }
+  utter.onend = onend; speechSynthesis.speak(utter);
+}
+
+// Sequencer
+let sceneTimer=0;let sceneIndex=0;let sceneProgress=0;
+function playSequence(){ if(playing) return; playing=true; sceneIndex=0; elapsed=0; sceneStart=performance.now(); runScene(sceneIndex); updateTimer(); }
+function pauseSequence(){ playing=false; speechSynthesis.cancel(); if(req) cancelAnimationFrame(req); }
+
+function runScene(i){ currentScene=i; sceneTimer=0; sceneStart = performance.now();
+  // start speech for this scene
+  subtitleEl.textContent = scenes[i].title + ' — ' + scenes[i].text;
+  drawScene(i,0);
+  speak(scenes[i].text, ()=>{
+    // do nothing on end; we control timing by dur
+  });
+  // animation loop for this scene
+  const dur = scenes[i].dur*1000;
+  function frame(now){
+    if(!playing) return;
+    const t = now - sceneStart; sceneProgress = Math.min(1, t/dur);
+    drawScene(i, sceneProgress);
+    updateTimer();
+    if(t < dur){ req = requestAnimationFrame(frame); } else {
+      // next scene
+      if(i+1 < scenes.length){ sceneIndex = i+1; sceneStart = performance.now(); runScene(i+1); }
+      else { playing=false; subtitleEl.textContent='播放结束 — 感谢观看'; }
+    }
+  }
+  req = requestAnimationFrame(frame);
+}
+
+function updateTimer(){
+  // compute elapsed from current scene index and progress
+  const passed = scenes.slice(0,sceneIndex).reduce((s,c)=>s+c.dur,0) + (sceneProgress * scenes[sceneIndex].dur || 0);
+  const fmt = s=>String(Math.floor(s/60)).padStart(2,'0')+":"+String(Math.floor(s%60)).padStart(2,'0');
+  timerEl.textContent = fmt(passed) + ' / ' + fmt(totalSec);
+}
+
+// Buttons
+document.getElementById('playBtn').addEventListener('click', ()=>{ playSequence(); });
+document.getElementById('pauseBtn').addEventListener('click', ()=>{ pauseSequence(); });
+
+// Recording (video-only using canvas.captureStream)
+let recorder, recordedBlobs;
+const recBtn = document.getElementById('recBtn');
+const stopRecBtn = document.getElementById('stopRecBtn');
+recBtn.addEventListener('click', async ()=>{
+  // start visual playback then record canvas
+  if(!playing) playSequence();
+  const stream = canvas.captureStream(30);
+  recordedBlobs = [];
+  try{
+    recorder = new MediaRecorder(stream, {mimeType:'video/webm;codecs=vp9'});
+  }catch(e){
+    recorder = new MediaRecorder(stream);
+  }
+  recorder.ondataavailable = e=>{ if(e.data && e.data.size>0) recordedBlobs.push(e.data); };
+  recorder.start(); recBtn.disabled=true; stopRecBtn.disabled=false; recBtn.textContent='录制中...';
+});
+stopRecBtn.addEventListener('click', ()=>{
+  recorder.stop(); recBtn.disabled=false; stopRecBtn.disabled=true; recBtn.textContent='开始录制（仅视频）';
+  const blob = new Blob(recordedBlobs, {type:'video/webm'});
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.style.display='none'; a.href=url; a.download='zhaopin_flow.webm'; document.body.appendChild(a); a.click(); setTimeout(()=>{ document.body.removeChild(a); window.URL.revokeObjectURL(url); },100);
+});
+
+// Initial draw
+drawScene(0,0);
+
+// Accessibility note: ensure voices are loaded
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = function(){ /* no-op to populate voices */ };
+}
+
+</script>
+
+<!--
+Usage notes:
+1. 保存本文件为 recruit_flow.html 并在现代浏览器（Chrome/Edge）打开。
+2. 点击“播放”开始动画并听到中文男声旁白（使用浏览器语音合成）。
+3. 如需导出视频：
+   - 点击“开始录制（仅视频）”记录画面（生成WebM文件，文件名 zhaopin_flow.webm）。
+   - 若需包含旁白音频，请同时使用系统屏幕录制工具（录制系统音），或先导出旁白音频（目前页面使用浏览器语音合成，若需文件版音频可使用在线TTS或本地工具生成），然后用FFmpeg合并：
+     ffmpeg -i zhaopin_flow.webm -i narration.mp3 -c:v copy -c:a aac -b:a 192k output.mp4
+4. webm 转 mp4（如需在本地转换）：
+   ffmpeg -i zhaopin_flow.webm -c:v libx264 -crf 18 -preset slow -c:a aac output.mp4
+-->
+
+</body>
+</html>
